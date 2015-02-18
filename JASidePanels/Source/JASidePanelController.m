@@ -25,8 +25,10 @@
 
 #import <QuartzCore/QuartzCore.h>
 #import "JASidePanelController.h"
+#import "UIApplication+FrankAutomation.h"
 
 static char ja_kvoContext;
+static NSString *const centerPanelContainerKeyPath = @"centerPanelContainer.frame";
 
 @interface JASidePanelController() {
     CGRect _centerPanelRestingFrame;		
@@ -42,6 +44,7 @@ static char ja_kvoContext;
 @property (nonatomic, strong) UIView *rightPanelContainer;
 @property (nonatomic, strong) UIView *centerPanelContainer;
 
+@property(nonatomic, strong) UIWindow *statusBarWindow;
 @end
 
 @implementation JASidePanelController
@@ -113,6 +116,7 @@ static char ja_kvoContext;
         [_centerPanel removeObserver:self forKeyPath:@"view"];
         [_centerPanel removeObserver:self forKeyPath:@"viewControllers"];
     }
+    [self removeObserver:self forKeyPath:centerPanelContainerKeyPath];
 }
 
 //Support creating from Storyboard
@@ -159,6 +163,11 @@ static char ja_kvoContext;
     self.centerPanelContainer = [[UIView alloc] initWithFrame:self.view.bounds];
     _centerPanelRestingFrame = self.centerPanelContainer.frame;
     _centerPanelHidden = NO;
+    
+    [self addObserver:self
+           forKeyPath:centerPanelContainerKeyPath
+              options:NSKeyValueObservingOptionNew
+              context:&ja_kvoContext];
     
     self.leftPanelContainer = [[UIView alloc] initWithFrame:self.view.bounds];
     self.leftPanelContainer.hidden = YES;
@@ -945,6 +954,11 @@ static char ja_kvoContext;
             // view controllers have changed, need to replace the button
             [self _placeButtonForLeftPanel];
         }
+        else if ([keyPath isEqualToString:centerPanelContainerKeyPath]) {
+            CGRect newFrame = [change[NSKeyValueChangeNewKey] CGRectValue];
+            CGRect frame = self.statusBarWindow.frame;
+            self.statusBarWindow.frame = CGRectMake(newFrame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
+        }
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
@@ -1040,4 +1054,21 @@ static char ja_kvoContext;
     }
 }
 
+#pragma mark - status bar window
+
+- (UIWindow *)getStatusBarWindow {
+    NSArray *windows = [[UIApplication sharedApplication] FEX_windows];
+    for (UIWindow *window in windows) {
+        if (window.windowLevel == UIWindowLevelStatusBar) {
+            return window;
+        }
+    }
+    return nil;
+}
+- (UIWindow *) statusBarWindow{
+    if(!_statusBarWindow){
+        _statusBarWindow = [self getStatusBarWindow];
+    }
+    return _statusBarWindow;
+}
 @end
