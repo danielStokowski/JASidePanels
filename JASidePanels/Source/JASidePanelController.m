@@ -44,7 +44,7 @@ static NSString *const centerPanelContainerKeyPath = @"centerPanelContainer.fram
 @property (nonatomic, strong) UIView *rightPanelContainer;
 @property (nonatomic, strong) UIView *centerPanelContainer;
 
-@property(nonatomic, strong) UIWindow *statusBarWindow;
+@property(nonatomic, strong) UIView *statusBarView;
 @end
 
 @implementation JASidePanelController
@@ -956,8 +956,8 @@ static NSString *const centerPanelContainerKeyPath = @"centerPanelContainer.fram
         }
         else if ([keyPath isEqualToString:centerPanelContainerKeyPath]) {
             CGRect newFrame = [change[NSKeyValueChangeNewKey] CGRectValue];
-            CGRect frame = self.statusBarWindow.frame;
-            self.statusBarWindow.frame = CGRectMake(newFrame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
+            CGRect frame = self.statusBarView.frame;
+            self.statusBarView.frame = CGRectMake(newFrame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
         }
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
@@ -1056,19 +1056,19 @@ static NSString *const centerPanelContainerKeyPath = @"centerPanelContainer.fram
 
 #pragma mark - status bar window
 
-- (UIWindow *)getStatusBarWindow {
+- (UIView *)getStatusBarView {
     NSArray *windows = [[UIApplication sharedApplication] FEX_windows];
     for (UIWindow *window in windows) {
         if (window.windowLevel == UIWindowLevelStatusBar) {
-            return window;
+            return window.subviews.firstObject;
         }
     }
     return nil;
 }
-- (UIWindow *) statusBarWindow{
-    if(!_statusBarWindow){
-        _statusBarWindow = [self getStatusBarWindow];
+- (UIWindow *)statusBarView {
+    if(!_statusBarView){
+        _statusBarView = [self getStatusBarView];
     }
-    return _statusBarWindow;
+    return _statusBarView;
 }
 @end
